@@ -43,6 +43,9 @@ WEATHER_LAT = ENV("WEATHER_LAT") or "25.012"
 WEATHER_LON = ENV("WEATHER_LON") or "121.466"
 WEATHER_PLACE = ENV("WEATHER_PLACE") or "New Taipei City"
 NEWS_FEED = ENV("NEWS_FEED") or "https://feeds.bbci.co.uk/newsround/rss.xml"
+MUSIC_ON = (ENV("MUSIC") or "on").lower() != "off"      # set variable MUSIC=off to disable
+MUSIC_GAIN_DB = float(ENV("MUSIC_GAIN_DB") or 0)         # make music louder (+) or softer (-)
+MUSIC_DIR = Path(ENV("MUSIC_DIR") or "music")            # optional own files: intro/transition/outro .mp3
 
 # Topic rotation (interleaved so similar topics are not back to back)
 TOPICS = [
@@ -378,12 +381,87 @@ def list_voices() -> None:
             print(v["name"], v.get("ssmlGender", ""))
 
 
+# ---------- music (synthesized music-box sounds; optional own files in ./music) ----------
+# Notes: C major. Melodies are Beethoven's "Ode to Joy" (public domain composition).
+NOTE = {"C4": 261.63, "D4": 293.66, "E4": 329.63, "F4": 349.23, "G4": 392.00,
+        "A4": 440.00, "C5": 523.25, "E5": 659.25, "G5": 783.99, "C6": 1046.50,
+        "C3": 130.81, "G3": 196.00}
+ODE_INTRO = [("E4", 1), ("E4", 1), ("F4", 1), ("G4", 1), ("G4", 1), ("F4", 1), ("E4", 1), ("D4", 1),
+             ("C4", 1), ("C4", 1), ("D4", 1), ("E4", 1), ("E4", 1.5), ("D4", 0.5), ("D4", 2)]
+ODE_OUTRO = [("E4", 1), ("E4", 1), ("F4", 1), ("G4", 1), ("G4", 1), ("F4", 1), ("E4", 1), ("D4", 1),
+             ("C4", 1), ("C4", 1), ("D4", 1), ("E4", 1), ("D4", 1.5), ("C4", 0.5), ("C4", 3)]
+
+
+def _tone(freq: float, dur: float, sr: int, vol: float = 1.0):
+    import numpy as np
+    t = np.arange(int(sr * dur)) / sr
+    env = np.exp(-t * 3.2) * np.minimum(1.0, t / 0.005)          # soft attack, bell-like decay
+    wave = (np.sin(2 * np.pi * freq * t) + 0.35 * np.sin(2 * np.pi * 2 * freq * t)
+            + 0.12 * np.sin(2 * np.pi * 3 * freq * t))
+    return vol * env * wave
+
+
+def _render(events, sr: int = 24000, tail: float = 1.2):
+    """events: list of (start_seconds, note_name, duration_seconds, volume)."""
+    import numpy as np
+    from pydub import AudioSegment
+    total = max(s + d for s, _, d, _ in events) + tail
+    buf = np.zeros(int(sr * total))
+    for start, note, dur, vol in events:
+        tone = _tone(NOTE[note], dur + tail, sr, vol)
+        i = int(sr * start)
+        buf[i:i + len(tone)] += tone[:len(buf) - i]
+    peak = np.max(np.abs(buf)) or 1.0
+    buf = buf / peak * 0.35                                       # about -9 dBFS peak
+    seg = AudioSegment(data=(buf * 32767).astype(np.int16).tobytes(),
+                       sample_width=2, frame_rate=sr, channels=1)
+    return seg.fade_in(30).fade_out(int(tail * 700))
+
+
+def _melody(notes, beat: float = 0.42, bass: bool = True):
+    events, t = [], 0.0
+    for name, beats in notes:
+        events.append((t, name, beats * beat, 1.0))
+        t += beats * beat
+    if bass:  # gentle bass notes under the tune
+        for k in range(0, int(t / (beat * 4)) + 1):
+            events.append((k * beat * 4, "C3" if k % 2 == 0 else "G3", beat * 3.5, 0.45))
+    return events
+
+
+def load_music() -> dict:
+    """Returns {"intro","transition","outro"} AudioSegments (own files override synthesized)."""
+    from pydub import AudioSegment
+    music = {
+        "intro": _render(_melody(ODE_INTRO)),
+        "outro": _render(_melody(ODE_OUTRO)),
+        "transition": _render([(0.0, "C5", 0.5, 1.0), (0.22, "E5", 0.5, 1.0),
+                               (0.44, "G5", 0.5, 1.0), (0.66, "C6", 0.9, 0.9)], tail=0.8),
+    }
+    for name in list(music):
+        for ext in ("mp3", "wav", "m4a"):
+            p = MUSIC_DIR / f"{name}.{ext}"
+            if p.exists():
+                music[name] = AudioSegment.from_file(p).set_channels(1).fade_in(50).fade_out(800)
+                log(f"[info] using your own music file: {p}")
+                break
+    if MUSIC_GAIN_DB:
+        music = {k: v.apply_gain(MUSIC_GAIN_DB) for k, v in music.items()}
+    return music
+
+
 def synthesize(script: dict, dry_run: bool):
     from pydub import AudioSegment
 
     tts = tts_openai if TTS_PROVIDER == "openai" else tts_google
-    audio = AudioSegment.silent(duration=600)
+    music = load_music() if MUSIC_ON else None
+    audio = music["intro"] + AudioSegment.silent(duration=500) if music else AudioSegment.silent(duration=600)
+    prev_group = None
     for seg in script["segments"]:
+        group = str(seg.get("id", "")).split("_")[0]
+        if music and prev_group is not None and group != prev_group:
+            audio += music["transition"] + AudioSegment.silent(duration=400)   # section change
+        prev_group = group
         for chunk in chunk_text(seg["text"]):
             if dry_run:
                 clip = AudioSegment.silent(duration=int(len(chunk.split()) * 400))
@@ -391,7 +469,10 @@ def synthesize(script: dict, dry_run: bool):
                 clip = AudioSegment.from_file(io.BytesIO(tts(chunk)), format="mp3")
             audio += clip + AudioSegment.silent(duration=250)
         audio += AudioSegment.silent(duration=int(seg["pause_after"] * 1000))
-    audio += AudioSegment.silent(duration=800)
+    if music:
+        audio += AudioSegment.silent(duration=300) + music["outro"]
+    else:
+        audio += AudioSegment.silent(duration=800)
     return audio.set_channels(1)
 
 
@@ -460,12 +541,20 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--list-voices", action="store_true")
+    ap.add_argument("--preview-music", action="store_true", help="export music_preview.mp3 and exit")
     ap.add_argument("--date", help="YYYY-MM-DD (default: today in Taipei)")
     ap.add_argument("--topic", choices=TOPICS)
     args = ap.parse_args()
 
     if args.list_voices:
         list_voices()
+        return
+    if args.preview_music:
+        from pydub import AudioSegment
+        m = load_music()
+        gap = AudioSegment.silent(duration=1500)
+        (m["intro"] + gap + m["transition"] + gap + m["outro"]).export("music_preview.mp3", format="mp3")
+        print("wrote music_preview.mp3 (intro, transition, outro)")
         return
 
     today = dt.date.fromisoformat(args.date) if args.date else dt.datetime.now(TZ).date()

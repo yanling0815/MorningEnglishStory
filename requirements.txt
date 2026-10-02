@@ -1,3 +1,4 @@
 anthropic>=0.40.0
 pydub>=0.25.1
 requests>=2.31.0
+numpy>=1.26
