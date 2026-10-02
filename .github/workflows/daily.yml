@@ -1,0 +1,63 @@
+name: Daily English episode
+
+on:
+  schedule:
+    - cron: "30 21 * * *"   # 05:30 Taiwan time (UTC+8). GitHub may run it a few minutes late.
+  workflow_dispatch:         # lets you run it manually from the Actions tab
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-episode
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Fetch previously published site (episodes + history)
+        run: |
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            git clone --depth 1 --branch gh-pages \
+              "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" site
+            rm -rf site/.git
+          else
+            mkdir -p site
+          fi
+
+      - name: Generate today's episode
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_TTS_API_KEY: ${{ secrets.GOOGLE_TTS_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TTS_PROVIDER: ${{ vars.TTS_PROVIDER || 'google' }}
+          GOOGLE_TTS_VOICE: ${{ vars.GOOGLE_TTS_VOICE }}
+          OPENAI_TTS_VOICE: ${{ vars.OPENAI_TTS_VOICE }}
+          SPEAKING_RATE: ${{ vars.SPEAKING_RATE }}
+          CLAUDE_MODEL: ${{ vars.CLAUDE_MODEL }}
+          KID_NAME: ${{ vars.KID_NAME }}
+          SHOW_TITLE: ${{ vars.SHOW_TITLE }}
+          WEATHER_LAT: ${{ vars.WEATHER_LAT }}
+          WEATHER_LON: ${{ vars.WEATHER_LON }}
+          WEATHER_PLACE: ${{ vars.WEATHER_PLACE }}
+          SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
+        run: python generate.py
+
+      - name: Publish to GitHub Pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          publish_branch: gh-pages
+          force_orphan: true   # keeps the repo small: only the latest site snapshot is stored
