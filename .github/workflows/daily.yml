@@ -23,11 +23,12 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-
-      - run: pip install -r requirements.txt
+          
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
+      - run: pip install -r requirements.txt
+      
       - name: Fetch previously published site (episodes + history)
         run: |
           if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
