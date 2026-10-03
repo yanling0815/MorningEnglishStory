@@ -1,0 +1,36 @@
+{
+ "episodes": [
+  {
+   "date": "2026-10-02",
+   "file": "episodes/2026-10-02.mp3",
+   "title": "Oct 2: The Orchestra and the Animal Party",
+   "topic": "classical music",
+   "new_words": [
+    "melody",
+    "section",
+    "gradually",
+    "perform"
+   ],
+   "news_headline": "",
+   "summary": "Topic: classical music. New words: melody, section, gradually, perform.",
+   "duration_sec": 281,
+   "bytes": 2250477
+  },
+  {
+   "date": "2026-10-03",
+   "file": "episodes/2026-10-03.mp3",
+   "title": "Oct 3: Blast Off! A Trip Around the Earth",
+   "topic": "space",
+   "new_words": [
+    "launch",
+    "orbit",
+    "gravity",
+    "experiment"
+   ],
+   "news_headline": "50 years of Saturday morning kids TV",
+   "summary": "Topic: space. New words: launch, orbit, gravity, experiment. News from BBC Newsround.",
+   "duration_sec": 306,
+   "bytes": 2451117
+  }
+ ]
+}
