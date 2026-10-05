@@ -2,7 +2,7 @@ name: Daily English episode
 
 on:
   schedule:
-    - cron: "30 21 * * *"   # 05:30 Taiwan time (UTC+8). GitHub may run it a few minutes late.
+    - cron: "17 17 * * *"   # 01:17 Taiwan time (UTC+8), early on purpose because GitHub delays schedules
   workflow_dispatch:         # lets you run it manually from the Actions tab
 
 permissions:
@@ -15,7 +15,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 
@@ -23,12 +23,12 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          
+
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
       - run: pip install -r requirements.txt
-      
+
       - name: Fetch previously published site (episodes + history)
         run: |
           if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
@@ -46,8 +46,15 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           TTS_PROVIDER: ${{ vars.TTS_PROVIDER || 'google' }}
           GOOGLE_TTS_VOICE: ${{ vars.GOOGLE_TTS_VOICE }}
+          GOOGLE_TTS_VOICE_A: ${{ vars.GOOGLE_TTS_VOICE_A }}
+          GOOGLE_TTS_VOICE_B: ${{ vars.GOOGLE_TTS_VOICE_B }}
           OPENAI_TTS_VOICE: ${{ vars.OPENAI_TTS_VOICE }}
+          OPENAI_TTS_VOICE_A: ${{ vars.OPENAI_TTS_VOICE_A }}
+          OPENAI_TTS_VOICE_B: ${{ vars.OPENAI_TTS_VOICE_B }}
           SPEAKING_RATE: ${{ vars.SPEAKING_RATE }}
+          SPELL_MODE: ${{ vars.SPELL_MODE }}
+          MUSIC: ${{ vars.MUSIC }}
+          MUSIC_GAIN_DB: ${{ vars.MUSIC_GAIN_DB }}
           CLAUDE_MODEL: ${{ vars.CLAUDE_MODEL }}
           KID_NAME: ${{ vars.KID_NAME }}
           SHOW_TITLE: ${{ vars.SHOW_TITLE }}
