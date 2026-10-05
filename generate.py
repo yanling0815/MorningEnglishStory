@@ -45,7 +45,20 @@ WEATHER_PLACE = ENV("WEATHER_PLACE") or "New Taipei City"
 NEWS_FEED = ENV("NEWS_FEED") or "https://feeds.bbci.co.uk/newsround/rss.xml"
 MUSIC_ON = (ENV("MUSIC") or "on").lower() != "off"      # set variable MUSIC=off to disable
 MUSIC_GAIN_DB = float(ENV("MUSIC_GAIN_DB") or 0)         # make music louder (+) or softer (-)
-MUSIC_DIR = Path(ENV("MUSIC_DIR") or "music")            # optional own files: intro/transition/outro .mp3
+MUSIC_DIR = Path(ENV("MUSIC_DIR") or "music")            # optional own files, see README
+SPELL_MODE = (ENV("SPELL_MODE") or "letters").lower()    # "letters" or "names" (fallback if letters sound odd)
+
+# Three voices: teacher (narration, news, vocabulary) + two story characters (A male, B female)
+GOOGLE_VOICES = {
+    "teacher": ENV("GOOGLE_TTS_VOICE") or "en-US-Chirp3-HD-Leda",
+    "A": ENV("GOOGLE_TTS_VOICE_A") or "en-US-Chirp3-HD-Puck",
+    "B": ENV("GOOGLE_TTS_VOICE_B") or "en-US-Chirp3-HD-Aoede",
+}
+OPENAI_VOICES = {
+    "teacher": ENV("OPENAI_TTS_VOICE") or "coral",
+    "A": ENV("OPENAI_TTS_VOICE_A") or "echo",
+    "B": ENV("OPENAI_TTS_VOICE_B") or "nova",
+}
 
 # Topic rotation (interleaved so similar topics are not back to back)
 TOPICS = [
@@ -179,17 +192,19 @@ SYSTEM = """You write scripts for a 5-minute morning English audio lesson. The l
 Style rules:
 - Warm, playful, curious teacher voice. Talk directly to the child ("you").
 - Language level: mostly A2 with some B1. Short sentences, mostly 8 to 15 words. Let the child hear useful PET grammar naturally: past simple, present perfect, comparatives and superlatives, "used to", "will" and "going to", first conditional, "have to" and "must".
-- Teach exactly 4 new target words or phrases at PET (B1) level that a KET-level child probably does not know yet. Use each one naturally in the story so the meaning is clear from context.
+- Teach exactly 4 new target words at PET (B1) level that a KET-level child probably does not know yet. Each must be ONE single word (no phrases). Use each one naturally in the story so the meaning is clear from context.
 - Plain spoken text only. No markdown, no bullet points, no emojis, no brackets, no stage directions, no URLs. Write numbers as words (for example "twenty-eight degrees Celsius").
 - Never invent facts. For the news, use only what the given headline and summary say. For the topic, share only facts you are very sure are true.
 - Everything must be safe, calm and positive for children.
+- Voices: "teacher" is the main narrator. "A" is a boy or man character and "B" is a girl or woman character. A and B speak only inside story dialogue. Characters are always invented (two children, two animals, a child and a guide, and so on). Never put invented words in the mouth of a real person.
 
 Required structure (use these segment ids, in this order):
-1. "greeting" (about 60 words): greet the child, say today's weekday and date, describe the weather in simple English, give one practical tip (umbrella, sunscreen, jacket, water...). If no weather data is given, just greet warmly. pause_after 1.0
-2. "news" (about 70 words): start with a phrase like "Now, a story from the news." and retell ONE suitable story from the given list in your own simple words, 4 to 6 short sentences, using the "when" label ("yesterday", "today" or "recently"). End with "That story comes from BBC Newsround." Choose only happy, interesting or science, nature, animal, culture, technology or sport stories. Skip anything about war, death, crime, disasters, accidents, politics, scary or sad events. If no story is suitable or the list is empty, set news_used to false and instead write a cheerful 3-sentence "fun fact of the day" without mentioning the BBC. pause_after 1.2
-3. "story_1", "story_2", "story_3" (about 100 words each): the main part, about the given topic. A small story or a set of surprising facts with a clear beginning, middle and end. Include all 4 target words. pause_after 0.8
-4. "vocab_1" to "vocab_4" (about 25 words each): in this pattern: the word or phrase, then a simple meaning, then one example sentence, then "Say it with me:" and the word again. pause_after 4.0
-5. "outro" (about 35 words): praise the child, one sentence recalling today's topic, say goodbye and "see you tomorrow". pause_after 0.
+1. "greeting" (about 60 words): greet the child, say today's weekday and date, describe the weather in simple English, give one practical tip (umbrella, sunscreen, jacket, water...). If no weather data is given, just greet warmly. pause_after 1.0. Shape: {"id": "greeting", "text": "...", "pause_after": 1.0}
+2. "news" (about 70 words): start with a phrase like "Now, a story from the news." and retell ONE suitable story from the given list in your own simple words, 4 to 6 short sentences, using the "when" label ("yesterday", "today" or "recently"). End with "That story comes from BBC Newsround." Choose only happy, interesting or science, nature, animal, culture, technology or sport stories. Skip anything about war, death, crime, disasters, accidents, politics, scary or sad events. If no story is suitable or the list is empty, set news_used to false and instead write a cheerful 3-sentence "fun fact of the day" without mentioning the BBC. pause_after 1.2. Same shape as greeting.
+3. "story_1", "story_2", "story_3" (about 100 words each): the main part, about the given topic, with a clear beginning, middle and end. Include all 4 target words. Shape: {"id": "story_1", "lines": [{"speaker": "teacher", "text": "..."}, {"speaker": "A", "text": "..."}, {"speaker": "B", "text": "..."}], "pause_after": 0.8}
+   The teacher narrates and introduces the characters. At least two of the three story parts must contain a short natural conversation between A and B (3 to 6 lines, each line at most 15 words). Dialogue lines contain ONLY the spoken words, never "he said". Use useful PET conversation language: suggestions, invitations, offers, requests, agreeing and disagreeing, asking for opinions and reasons.
+4. "vocab_1" to "vocab_4": one target word each. Shape: {"id": "vocab_1", "word": "journey", "meaning": "A journey is a trip from one place to another.", "example": "Our journey to the mountains took three hours.", "pause_after": 4.0}. "word" is one single word. "meaning" is one short simple sentence. "example" is one sentence. Do NOT write the spelling; the program spells the word aloud by itself.
+5. "outro" (about 35 words): praise the child, one sentence recalling today's topic, say goodbye and "see you tomorrow". pause_after 0. Same shape as greeting.
 
 The whole script must be about 600 words (between 540 and 680).
 
@@ -200,7 +215,7 @@ Output ONLY valid JSON, nothing else, in exactly this shape:
   "news_used": true,
   "news_headline": "the original headline you used, or empty string",
   "new_words": ["word1", "word2", "word3", "word4"],
-  "segments": [{"id": "greeting", "text": "...", "pause_after": 1.0}]
+  "segments": [ ...the segments described above... ]
 }"""
 
 
@@ -254,24 +269,54 @@ def clean_text(t: str) -> str:
     return re.sub(r"\s+", " ", t).strip()
 
 
-def validate_script(s: dict) -> tuple[bool, str]:
+VALID_SPEAKERS = {"teacher", "A", "B"}
+
+
+def validate_script(s: dict, check_length: bool = True) -> tuple[bool, str]:
     segs = s.get("segments")
     if not isinstance(segs, list) or len(segs) < 10:
         return False, "segments missing or too few"
-    if not isinstance(s.get("new_words"), list) or len(s["new_words"]) < 3:
-        return False, "new_words missing"
-    words = 0
+    words, vocab_words = 0, []
     for seg in segs:
-        if not isinstance(seg.get("text"), str) or not seg["text"].strip():
-            return False, f"segment {seg.get('id')} has no text"
-        seg["text"] = clean_text(seg["text"])
+        sid = str(seg.get("id", ""))
+        if sid.startswith("vocab"):
+            w = clean_text(str(seg.get("word", "")))
+            m = clean_text(str(seg.get("meaning", "")))
+            e = clean_text(str(seg.get("example", "")))
+            if not (w and m and e):
+                return False, f"{sid} needs word, meaning and example"
+            if " " in w:
+                return False, f"{sid}: word must be ONE single word, not '{w}'"
+            seg.update(word=w, meaning=m, example=e)
+            seg["text"] = f"{w}. {m} {e} Say it with me: {w}."
+            vocab_words.append(w)
+        elif isinstance(seg.get("lines"), list) and seg["lines"]:
+            lines = []
+            for ln in seg["lines"]:
+                t = clean_text(str(ln.get("text", "")))
+                sp = ln.get("speaker", "teacher")
+                if t:
+                    lines.append({"speaker": sp if sp in VALID_SPEAKERS else "teacher", "text": t})
+            if not lines:
+                return False, f"{sid} has no lines"
+            seg["lines"] = lines
+            seg["text"] = " ".join(x["text"] for x in lines)
+        elif isinstance(seg.get("text"), str) and seg["text"].strip():
+            seg["text"] = clean_text(seg["text"])
+        else:
+            return False, f"segment {sid} has no text"
         try:
             seg["pause_after"] = min(max(float(seg.get("pause_after", 0.8)), 0.0), 6.0)
         except (TypeError, ValueError):
             seg["pause_after"] = 0.8
         words += len(seg["text"].split())
+    if len(vocab_words) < 3:
+        return False, "need 4 vocab segments with a word each"
+    s["new_words"] = vocab_words
     s["_words"] = words
-    if not 480 <= words <= 760:
+    s["_dialogue_lines"] = sum(1 for seg in segs for x in seg.get("lines", [])
+                               if x["speaker"] in ("A", "B"))
+    if check_length and not 480 <= words <= 760:
         return False, f"script has {words} words; it must be between 540 and 680"
     return True, "ok"
 
@@ -284,7 +329,7 @@ def generate_script(today, weather, news, topic, history) -> dict:
     feedback = ""
     for attempt in range(3):
         msg = client.messages.create(
-            model=CLAUDE_MODEL, max_tokens=4000, system=SYSTEM,
+            model=CLAUDE_MODEL, max_tokens=5000, system=SYSTEM,
             messages=[{"role": "user", "content": prompt + feedback}],
         )
         raw = "".join(b.text for b in msg.content if b.type == "text")
@@ -293,22 +338,41 @@ def generate_script(today, weather, news, topic, history) -> dict:
             ok, why = validate_script(script)
         except (ValueError, json.JSONDecodeError) as e:
             ok, why = False, f"invalid JSON ({e})"
+        # soft requirement: ask twice for real dialogue, but never fail the whole day over it
+        if ok and attempt < 2 and script["_dialogue_lines"] < 6:
+            ok, why = False, ("the stories need at least two short conversations between "
+                              "speakers A and B (6 or more lines with speaker A or B in total)")
         if ok:
-            log(f"[info] script ok: {script['_words']} words, title: {script.get('title')}")
+            log(f"[info] script ok: {script['_words']} words, "
+                f"{script['_dialogue_lines']} dialogue lines, title: {script.get('title')}")
             return script
         log(f"[warn] attempt {attempt + 1} rejected: {why}")
         feedback = f"\n\nYour previous attempt was rejected: {why}. Fix this and output the JSON again."
     raise SystemExit("Could not get a valid script from Claude")
 
 
+def _sample_seg(i, text, pause=0.8):
+    return {"id": i, "text": text, "pause_after": pause}
+
+
 SAMPLE_SCRIPT = {
     "title": "Dry Run Sample", "topic": "trains", "news_used": False,
     "news_headline": "", "new_words": ["journey", "engine", "platform", "ticket"],
     "segments": [
-        {"id": "greeting", "text": "Hello! This is a test episode. " * 3, "pause_after": 1.0},
-        {"id": "story_1", "text": "Trains are fun. " * 10, "pause_after": 0.8},
-        {"id": "vocab_1", "text": "Journey. A trip from one place to another.", "pause_after": 4.0},
-    ],
+        _sample_seg("greeting", "Hello! This is a test episode. " * 2, 1.0),
+        _sample_seg("news", "Now, a story from the news. " * 3, 1.2),
+        {"id": "story_1", "pause_after": 0.8, "lines": [
+            {"speaker": "teacher", "text": "Leo and Mia are at the station."},
+            {"speaker": "A", "text": "Let's take the early train."},
+            {"speaker": "B", "text": "Good idea. I'll buy the tickets."}]},
+        {"id": "story_2", "pause_after": 0.8, "lines": [
+            {"speaker": "teacher", "text": "The train was very fast."}]},
+        {"id": "story_3", "pause_after": 0.8, "lines": [
+            {"speaker": "teacher", "text": "They arrived happy."}]},
+    ] + [{"id": f"vocab_{n}", "word": w, "meaning": f"A {w} is something on a train.",
+          "example": f"I saw a {w} today.", "pause_after": 4.0}
+         for n, w in enumerate(["journey", "engine", "platform", "ticket"], 1)]
+      + [_sample_seg("outro", "Great job today. See you tomorrow!", 0)],
 }
 
 
@@ -327,11 +391,24 @@ def chunk_text(text: str, limit: int = 900) -> list[str]:
     return chunks
 
 
-def tts_google(text: str) -> bytes:
+LETTER_NAMES = dict(zip("abcdefghijklmnopqrstuvwxyz", [
+    "ay", "bee", "see", "dee", "ee", "eff", "jee", "aitch", "eye", "jay", "kay", "el", "em",
+    "en", "oh", "pee", "cue", "ar", "ess", "tee", "you", "vee", "double you", "ex", "why", "zee"]))
+
+
+def spell_text(word: str) -> str:
+    letters = [c for c in word if c.isalpha()]
+    if SPELL_MODE == "names":
+        return ", ".join(LETTER_NAMES[c.lower()] for c in letters) + "."
+    return ", ".join(c.upper() for c in letters) + "."
+
+
+def tts_google(text: str, role: str = "teacher", style: str = "normal") -> bytes:
     key = need("GOOGLE_TTS_API_KEY")
-    voice = ENV("GOOGLE_TTS_VOICE") or "en-US-Chirp3-HD-Leda"
+    voice = GOOGLE_VOICES.get(role, GOOGLE_VOICES["teacher"])
     lang = "-".join(voice.split("-")[:2])
-    cfg = {"audioEncoding": "MP3", "speakingRate": float(ENV("SPEAKING_RATE") or 0.92)}
+    rate = float(ENV("SPEAKING_RATE") or 0.92) * (0.85 if style == "spell" else 1.0)
+    cfg = {"audioEncoding": "MP3", "speakingRate": round(rate, 3)}
     url = f"https://texttospeech.googleapis.com/v1/text:synthesize?key={key}"
 
     def call():
@@ -347,28 +424,50 @@ def tts_google(text: str) -> bytes:
         cfg.pop("speakingRate")
         r = call()
     if r.status_code != 200:
-        raise RuntimeError(f"Google TTS error {r.status_code}: {r.text[:300]}")
+        raise RuntimeError(f"Google TTS error {r.status_code} (voice {voice}): {r.text[:300]}")
     return base64.b64decode(r.json()["audioContent"])
 
 
-def tts_openai(text: str) -> bytes:
+OPENAI_STYLE = {
+    "teacher": "Speak as a warm, patient English teacher talking to a 10-year-old. "
+               "Clear, friendly, a little slower than normal, with natural expression.",
+    "A": "Speak as a friendly boy or man character in a children's story. "
+         "Expressive and natural, but clear for English learners.",
+    "B": "Speak as a friendly girl or woman character in a children's story. "
+         "Expressive and natural, but clear for English learners.",
+}
+
+
+def tts_openai(text: str, role: str = "teacher", style: str = "normal") -> bytes:
     key = need("OPENAI_API_KEY")
+    instructions = OPENAI_STYLE.get(role, OPENAI_STYLE["teacher"])
+    if style == "spell":
+        instructions += " Say each letter slowly and clearly with a short pause between letters."
     r = post_with_retry(
         "https://api.openai.com/v1/audio/speech",
         headers={"Authorization": f"Bearer {key}"},
         json={
             "model": ENV("OPENAI_TTS_MODEL") or "gpt-4o-mini-tts",
-            "voice": ENV("OPENAI_TTS_VOICE") or "coral",
+            "voice": OPENAI_VOICES.get(role, OPENAI_VOICES["teacher"]),
             "input": text,
-            "instructions": "Speak as a warm, patient English teacher talking to a "
-                            "10-year-old. Clear, friendly, a little slower than normal, "
-                            "with natural expression.",
+            "instructions": instructions,
             "response_format": "mp3",
         },
     )
     if r.status_code != 200:
         raise RuntimeError(f"OpenAI TTS error {r.status_code}: {r.text[:300]}")
     return r.content
+
+
+_tts_cache: dict = {}
+
+
+def speak(text: str, role: str = "teacher", style: str = "normal") -> bytes:
+    key = (TTS_PROVIDER, role, style, text)
+    if key not in _tts_cache:
+        fn = tts_openai if TTS_PROVIDER == "openai" else tts_google
+        _tts_cache[key] = fn(text, role, style)
+    return _tts_cache[key]
 
 
 def list_voices() -> None:
@@ -381,34 +480,61 @@ def list_voices() -> None:
             print(v["name"], v.get("ssmlGender", ""))
 
 
-# ---------- music (synthesized music-box sounds; optional own files in ./music) ----------
-# Notes: C major. Melodies are Beethoven's "Ode to Joy" (public domain composition).
-NOTE = {"C4": 261.63, "D4": 293.66, "E4": 329.63, "F4": 349.23, "G4": 392.00,
-        "A4": 440.00, "C5": 523.25, "E5": 659.25, "G5": 783.99, "C6": 1046.50,
-        "C3": 130.81, "G3": 196.00}
+# ---------- music (synthesized sounds; optional own files in ./music) ----------
+# Melodies: Beethoven's "Ode to Joy" (public domain composition). Each section change has its own cue.
+NOTE = {"C3": 130.81, "G3": 196.00, "C4": 261.63, "D4": 293.66, "E4": 329.63, "F4": 349.23,
+        "G4": 392.00, "A4": 440.00, "B4": 493.88, "C5": 523.25, "D5": 587.33, "E5": 659.25,
+        "F5": 698.46, "G5": 783.99, "A5": 880.00, "C6": 1046.50}
+TIMBRES = {  # decay speed and overtone mix: different instruments for different cues
+    "bell":    {"decay": 3.2, "partials": [(1, 1.0), (2, 0.35), (3, 0.12)]},
+    "marimba": {"decay": 7.0, "partials": [(1, 1.0), (4, 0.25), (9.2, 0.05)]},
+    "harp":    {"decay": 4.5, "partials": [(1, 1.0), (2, 0.5), (3, 0.3), (4, 0.15), (5, 0.08)]},
+    "glock":   {"decay": 2.4, "partials": [(1, 1.0), (3, 0.5), (5, 0.25), (8, 0.1)]},
+}
 ODE_INTRO = [("E4", 1), ("E4", 1), ("F4", 1), ("G4", 1), ("G4", 1), ("F4", 1), ("E4", 1), ("D4", 1),
              ("C4", 1), ("C4", 1), ("D4", 1), ("E4", 1), ("E4", 1.5), ("D4", 0.5), ("D4", 2)]
 ODE_OUTRO = [("E4", 1), ("E4", 1), ("F4", 1), ("G4", 1), ("G4", 1), ("F4", 1), ("E4", 1), ("D4", 1),
              ("C4", 1), ("C4", 1), ("D4", 1), ("E4", 1), ("D4", 1.5), ("C4", 0.5), ("C4", 3)]
 
+# (events, tail seconds); event = (start, note, duration, volume, timbre)
+CUES = {
+    # greeting -> news: bright rising marimba run, "news flash"
+    "news": ([(0.00, "G4", 0.2, 1.0, "marimba"), (0.11, "C5", 0.2, 1.0, "marimba"),
+              (0.22, "E5", 0.2, 1.0, "marimba"), (0.33, "G5", 0.2, 1.0, "marimba"),
+              (0.55, "C6", 0.6, 1.0, "glock"), (0.55, "E5", 0.6, 0.5, "glock")], 0.7),
+    # news -> story: magical harp sweep, "story time"
+    "story": ([(i * 0.13, n, 0.3, 0.9, "harp")
+               for i, n in enumerate(["C4", "E4", "G4", "C5", "E5", "G5"])]
+              + [(0.95, "C6", 1.0, 1.0, "bell")], 1.0),
+    # story -> vocabulary: ding ding ding DING, "learning time"
+    "vocab": ([(0.00, "G5", 0.25, 1.0, "glock"), (0.25, "G5", 0.25, 1.0, "glock"),
+               (0.50, "G5", 0.25, 1.0, "glock"), (0.80, "C6", 0.7, 1.0, "glock")], 0.7),
+    # vocabulary -> outro: gentle falling bells, "goodbye"
+    "closing": ([(0.00, "G5", 0.4, 1.0, "bell"), (0.35, "E5", 0.4, 1.0, "bell"),
+                 (0.70, "C5", 0.4, 1.0, "bell"), (1.05, "G4", 1.0, 1.0, "bell"),
+                 (1.05, "C4", 1.0, 0.6, "bell")], 1.2),
+}
+CUE_FOR = {("greeting", "news"): "news", ("news", "story"): "story",
+           ("story", "vocab"): "vocab", ("vocab", "outro"): "closing"}
 
-def _tone(freq: float, dur: float, sr: int, vol: float = 1.0):
+
+def _tone(freq: float, dur: float, sr: int, vol: float = 1.0, timbre: str = "bell"):
     import numpy as np
+    tb = TIMBRES[timbre]
     t = np.arange(int(sr * dur)) / sr
-    env = np.exp(-t * 3.2) * np.minimum(1.0, t / 0.005)          # soft attack, bell-like decay
-    wave = (np.sin(2 * np.pi * freq * t) + 0.35 * np.sin(2 * np.pi * 2 * freq * t)
-            + 0.12 * np.sin(2 * np.pi * 3 * freq * t))
+    env = np.exp(-t * tb["decay"]) * np.minimum(1.0, t / 0.005)
+    wave = sum(a * np.sin(2 * np.pi * freq * k * t) for k, a in tb["partials"])
     return vol * env * wave
 
 
 def _render(events, sr: int = 24000, tail: float = 1.2):
-    """events: list of (start_seconds, note_name, duration_seconds, volume)."""
+    """events: (start_seconds, note_name, duration_seconds, volume[, timbre])."""
     import numpy as np
     from pydub import AudioSegment
-    total = max(s + d for s, _, d, _ in events) + tail
+    total = max(e[0] + e[2] for e in events) + tail
     buf = np.zeros(int(sr * total))
-    for start, note, dur, vol in events:
-        tone = _tone(NOTE[note], dur + tail, sr, vol)
+    for start, note, dur, vol, *rest in events:
+        tone = _tone(NOTE[note], dur + tail, sr, vol, rest[0] if rest else "bell")
         i = int(sr * start)
         buf[i:i + len(tone)] += tone[:len(buf) - i]
     peak = np.max(np.abs(buf)) or 1.0
@@ -430,44 +556,78 @@ def _melody(notes, beat: float = 0.42, bass: bool = True):
 
 
 def load_music() -> dict:
-    """Returns {"intro","transition","outro"} AudioSegments (own files override synthesized)."""
+    """Returns AudioSegments for intro, outro and the cues news/story/vocab/closing.
+    Own files in ./music (intro, outro, news, story, vocab, closing; optional 'transition'
+    used for any cue without its own file) override the synthesized ones."""
     from pydub import AudioSegment
-    music = {
-        "intro": _render(_melody(ODE_INTRO)),
-        "outro": _render(_melody(ODE_OUTRO)),
-        "transition": _render([(0.0, "C5", 0.5, 1.0), (0.22, "E5", 0.5, 1.0),
-                               (0.44, "G5", 0.5, 1.0), (0.66, "C6", 0.9, 0.9)], tail=0.8),
-    }
-    for name in list(music):
+    music = {"intro": _render(_melody(ODE_INTRO)), "outro": _render(_melody(ODE_OUTRO))}
+    for name, (events, tail) in CUES.items():
+        music[name] = _render(events, tail=tail)
+
+    def find(name):
         for ext in ("mp3", "wav", "m4a"):
             p = MUSIC_DIR / f"{name}.{ext}"
             if p.exists():
-                music[name] = AudioSegment.from_file(p).set_channels(1).fade_in(50).fade_out(800)
-                log(f"[info] using your own music file: {p}")
-                break
+                return p
+        return None
+
+    for name in list(music):
+        p = find(name) or (find("transition") if name in CUES else None)
+        if p:
+            music[name] = AudioSegment.from_file(p).set_channels(1).fade_in(50).fade_out(800)
+            log(f"[info] using your own music file: {p}")
     if MUSIC_GAIN_DB:
         music = {k: v.apply_gain(MUSIC_GAIN_DB) for k, v in music.items()}
     return music
 
 
+def level(clip, target_db: float = -21.0):
+    """Even out loudness between the three voices (and keep headroom)."""
+    if clip.dBFS < -60:
+        return clip
+    gain = min(target_db - clip.dBFS, -1.0 - clip.max_dBFS)
+    return clip.apply_gain(max(gain, -10.0))
+
+
+def segment_pieces(seg: dict):
+    """Break a script segment into (role, text, style, gap_ms) pieces."""
+    if seg.get("word"):                       # vocabulary: word, spelling, word, meaning, repeat
+        w = seg["word"]
+        return [("teacher", w, "normal", 450),
+                ("teacher", spell_text(w), "spell", 650),
+                ("teacher", w, "normal", 600),
+                ("teacher", f"{seg['meaning']} {seg['example']}", "normal", 450),
+                ("teacher", f"Say it with me: {w}.", "normal", 250)]
+    if seg.get("lines"):                      # story with narrator and character voices
+        lines, out = seg["lines"], []
+        for i, ln in enumerate(lines):
+            nxt = lines[i + 1]["speaker"] if i + 1 < len(lines) else None
+            out.append((ln["speaker"], ln["text"], "normal", 220 if nxt == ln["speaker"] else 420))
+        return out
+    return [("teacher", seg["text"], "normal", 250)]
+
+
 def synthesize(script: dict, dry_run: bool):
     from pydub import AudioSegment
 
-    tts = tts_openai if TTS_PROVIDER == "openai" else tts_google
     music = load_music() if MUSIC_ON else None
-    audio = music["intro"] + AudioSegment.silent(duration=500) if music else AudioSegment.silent(duration=600)
+    audio = (music["intro"] + AudioSegment.silent(duration=500)) if music \
+        else AudioSegment.silent(duration=600)
     prev_group = None
     for seg in script["segments"]:
         group = str(seg.get("id", "")).split("_")[0]
         if music and prev_group is not None and group != prev_group:
-            audio += music["transition"] + AudioSegment.silent(duration=400)   # section change
+            cue = CUE_FOR.get((prev_group, group), "story")
+            audio += music[cue] + AudioSegment.silent(duration=400)   # section change
         prev_group = group
-        for chunk in chunk_text(seg["text"]):
-            if dry_run:
-                clip = AudioSegment.silent(duration=int(len(chunk.split()) * 400))
-            else:
-                clip = AudioSegment.from_file(io.BytesIO(tts(chunk)), format="mp3")
-            audio += clip + AudioSegment.silent(duration=250)
+        for role, text, style, gap in segment_pieces(seg):
+            for chunk in chunk_text(text):
+                if dry_run:
+                    clip = AudioSegment.silent(duration=int(len(chunk.split()) * 400))
+                else:
+                    clip = level(AudioSegment.from_file(io.BytesIO(speak(chunk, role, style)),
+                                                        format="mp3"))
+                audio += clip + AudioSegment.silent(duration=gap)
         audio += AudioSegment.silent(duration=int(seg["pause_after"] * 1000))
     if music:
         audio += AudioSegment.silent(duration=300) + music["outro"]
@@ -487,7 +647,7 @@ def write_feed(history: dict) -> None:
     items = []
     for e in eps:
         d = dt.date.fromisoformat(e["date"])
-        pub = format_datetime(dt.datetime.combine(d, dt.time(5, 30), TZ))
+        pub = format_datetime(dt.datetime.combine(d, dt.time(0, 5), TZ))
         url = f"{SITE_URL}/{e['file']}"
         items.append(f"""    <item>
       <title>{escape(e['title'])}</title>
@@ -553,8 +713,12 @@ def main() -> None:
         from pydub import AudioSegment
         m = load_music()
         gap = AudioSegment.silent(duration=1500)
-        (m["intro"] + gap + m["transition"] + gap + m["outro"]).export("music_preview.mp3", format="mp3")
-        print("wrote music_preview.mp3 (intro, transition, outro)")
+        order = ["intro", "news", "story", "vocab", "closing", "outro"]
+        mix = m[order[0]]
+        for k in order[1:]:
+            mix += gap + m[k]
+        mix.export("music_preview.mp3", format="mp3")
+        print("wrote music_preview.mp3 (" + ", ".join(order) + ")")
         return
 
     today = dt.date.fromisoformat(args.date) if args.date else dt.datetime.now(TZ).date()
@@ -567,7 +731,11 @@ def main() -> None:
     news = get_news(today)
     log(f"[info] weather: {weather}; news candidates: {len(news)}")
 
-    script = SAMPLE_SCRIPT if args.dry_run else generate_script(today, weather, news, topic, history)
+    if args.dry_run:
+        script = SAMPLE_SCRIPT
+        validate_script(script, check_length=False)
+    else:
+        script = generate_script(today, weather, news, topic, history)
     audio = synthesize(script, args.dry_run)
 
     rel = f"episodes/{today.isoformat()}.mp3"
