@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>Morning English for Aidan and Amber</title>
+    <link>https://yanling0815.github.io/MorningEnglishStory</link>
+    <language>en</language>
+    <description>A short daily English lesson with weather, kids news and a fun story.</description>
+    <itunes:author>Morning English for Aidan and Amber</itunes:author>
+    <itunes:explicit>false</itunes:explicit>
+    <itunes:category text="Education"/>
+    <item>
+      <title>Oct 10: Dancing Bees and Hand-Holding Otters</title>
+      <description>Topic: animals. New words: creature, signal, enormous, survive. News from BBC Newsround.</description>
+      <pubDate>Sat, 10 Oct 2026 00:05:00 +0800</pubDate>
+      <guid isPermaLink="false">2026-10-10-morning-english</guid>
+      <enclosure url="https://yanling0815.github.io/MorningEnglishStory/episodes/2026-10-10.mp3" length="2511597" type="audio/mpeg"/>
+      <itunes:duration>00:05:14</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Oct 9: Boat Trip to Ha Long Bay</title>
+      <description>Topic: travel: Ha Long Bay in Vietnam. New words: journey, harbour, scenery, cliff. News from BBC Newsround.</description>
+      <pubDate>Fri, 09 Oct 2026 00:05:00 +0800</pubDate>
+      <guid isPermaLink="false">2026-10-09-morning-english</guid>
+      <enclosure url="https://yanling0815.github.io/MorningEnglishStory/episodes/2026-10-09.mp3" length="2499309" type="audio/mpeg"/>
+      <itunes:duration>00:05:12</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Oct 8: Peach Baskets and a School Tournament</title>
+      <description>Topic: sports. New words: tournament, equipment, opponent, referee. News from BBC Newsround.</description>
+      <pubDate>Thu, 08 Oct 2026 00:05:00 +0800</pubDate>
+      <guid isPermaLink="false">2026-10-08-morning-english</guid>
+      <enclosure url="https://yanling0815.github.io/MorningEnglishStory/episodes/2026-10-08.mp3" length="2719533" type="audio/mpeg"/>
+      <itunes:duration>00:05:40</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Oct 7: Velcro: A Big Idea from Tiny Seeds</title>
+      <description>Topic: inventions. New words: engineer, notice, hook, fasten. News from BBC Newsround.</description>
+      <pubDate>Wed, 07 Oct 2026 00:05:00 +0800</pubDate>
+      <guid isPermaLink="false">2026-10-07-morning-english</guid>
+      <enclosure url="https://yanling0815.github.io/MorningEnglishStory/episodes/2026-10-07.mp3" length="2502573" type="audio/mpeg"/>
+      <itunes:duration>00:05:13</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Oct 6: Rainy Day Painting Adventure</title>
+      <description>Topic: painting. New words: portrait, sketch, gallery, mixture. News from BBC Newsround.</description>
+      <pubDate>Tue, 06 Oct 2026 00:05:00 +0800</pubDate>
+      <guid isPermaLink="false">2026-10-06-morning-english</guid>
+      <enclosure url="https://yanling0815.github.io/MorningEnglishStory/episodes/2026-10-06.mp3" length="2674797" type="audio/mpeg"/>
+      <itunes:duration>00:05:34</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Oct 5: A Rainy Day Pizza Surprise</title>
+      <description>Topic: food: how pizza is made. New words: recipe, dough, ripe, stir. News from BBC Newsround.</description>
+      <pubDate>Mon, 05 Oct 2026 00:05:00 +0800</pubDate>
+      <guid isPermaLink="false">2026-10-05-morning-english</guid>
+      <enclosure url="https://yanling0815.github.io/MorningEnglishStory/episodes/2026-10-05.mp3" length="2515437" type="audio/mpeg"/>
+      <itunes:duration>00:05:14</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Oct 4: Trains: From Steam to Bullet</title>
+      <description>Topic: trains. New words: invent, passenger, carriage, tunnel. News from BBC Newsround.</description>
+      <pubDate>Sun, 04 Oct 2026 00:05:00 +0800</pubDate>
+      <guid isPermaLink="false">2026-10-04-morning-english</guid>
+      <enclosure url="https://yanling0815.github.io/MorningEnglishStory/episodes/2026-10-04.mp3" length="2428461" type="audio/mpeg"/>
+      <itunes:duration>00:05:03</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Oct 3: Blast Off! A Trip Around the Earth</title>
+      <description>Topic: space. New words: launch, orbit, gravity, experiment. News from BBC Newsround.</description>
+      <pubDate>Sat, 03 Oct 2026 00:05:00 +0800</pubDate>
+      <guid isPermaLink="false">2026-10-03-morning-english</guid>
+      <enclosure url="https://yanling0815.github.io/MorningEnglishStory/episodes/2026-10-03.mp3" length="2451117" type="audio/mpeg"/>
+      <itunes:duration>00:05:06</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+    <item>
+      <title>Oct 2: The Orchestra and the Animal Party</title>
+      <description>Topic: classical music. New words: melody, section, gradually, perform.</description>
+      <pubDate>Fri, 02 Oct 2026 00:05:00 +0800</pubDate>
+      <guid isPermaLink="false">2026-10-02-morning-english</guid>
+      <enclosure url="https://yanling0815.github.io/MorningEnglishStory/episodes/2026-10-02.mp3" length="2250477" type="audio/mpeg"/>
+      <itunes:duration>00:04:41</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+  </channel>
+</rss>

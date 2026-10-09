@@ -1,0 +1,148 @@
+{
+ "episodes": [
+  {
+   "date": "2026-10-02",
+   "file": "episodes/2026-10-02.mp3",
+   "title": "Oct 2: The Orchestra and the Animal Party",
+   "topic": "classical music",
+   "new_words": [
+    "melody",
+    "section",
+    "gradually",
+    "perform"
+   ],
+   "news_headline": "",
+   "summary": "Topic: classical music. New words: melody, section, gradually, perform.",
+   "duration_sec": 281,
+   "bytes": 2250477
+  },
+  {
+   "date": "2026-10-03",
+   "file": "episodes/2026-10-03.mp3",
+   "title": "Oct 3: Blast Off! A Trip Around the Earth",
+   "topic": "space",
+   "new_words": [
+    "launch",
+    "orbit",
+    "gravity",
+    "experiment"
+   ],
+   "news_headline": "50 years of Saturday morning kids TV",
+   "summary": "Topic: space. New words: launch, orbit, gravity, experiment. News from BBC Newsround.",
+   "duration_sec": 306,
+   "bytes": 2451117
+  },
+  {
+   "date": "2026-10-04",
+   "file": "episodes/2026-10-04.mp3",
+   "title": "Oct 4: Trains: From Steam to Bullet",
+   "topic": "trains",
+   "new_words": [
+    "invent",
+    "passenger",
+    "carriage",
+    "tunnel"
+   ],
+   "news_headline": "Winner of Fat Bear Week 2026 revealed",
+   "summary": "Topic: trains. New words: invent, passenger, carriage, tunnel. News from BBC Newsround.",
+   "duration_sec": 303,
+   "bytes": 2428461
+  },
+  {
+   "date": "2026-10-05",
+   "file": "episodes/2026-10-05.mp3",
+   "title": "Oct 5: A Rainy Day Pizza Surprise",
+   "topic": "food: how pizza is made",
+   "new_words": [
+    "recipe",
+    "dough",
+    "ripe",
+    "stir"
+   ],
+   "news_headline": "Happy News: Stories to make you smile",
+   "summary": "Topic: food: how pizza is made. New words: recipe, dough, ripe, stir. News from BBC Newsround.",
+   "duration_sec": 314,
+   "bytes": 2515437
+  },
+  {
+   "date": "2026-10-06",
+   "file": "episodes/2026-10-06.mp3",
+   "title": "Oct 6: Rainy Day Painting Adventure",
+   "topic": "painting",
+   "new_words": [
+    "portrait",
+    "sketch",
+    "gallery",
+    "mixture"
+   ],
+   "news_headline": "Watch Newsround",
+   "summary": "Topic: painting. New words: portrait, sketch, gallery, mixture. News from BBC Newsround.",
+   "duration_sec": 334,
+   "bytes": 2674797
+  },
+  {
+   "date": "2026-10-07",
+   "file": "episodes/2026-10-07.mp3",
+   "title": "Oct 7: Velcro: A Big Idea from Tiny Seeds",
+   "topic": "inventions",
+   "new_words": [
+    "engineer",
+    "notice",
+    "hook",
+    "fasten"
+   ],
+   "news_headline": "Your Planet: Environmental news from around the world",
+   "summary": "Topic: inventions. New words: engineer, notice, hook, fasten. News from BBC Newsround.",
+   "duration_sec": 313,
+   "bytes": 2502573
+  },
+  {
+   "date": "2026-10-08",
+   "file": "episodes/2026-10-08.mp3",
+   "title": "Oct 8: Peach Baskets and a School Tournament",
+   "topic": "sports",
+   "new_words": [
+    "tournament",
+    "equipment",
+    "opponent",
+    "referee"
+   ],
+   "news_headline": "Lionel Messi plays final game for Argentina",
+   "summary": "Topic: sports. New words: tournament, equipment, opponent, referee. News from BBC Newsround.",
+   "duration_sec": 340,
+   "bytes": 2719533
+  },
+  {
+   "date": "2026-10-09",
+   "file": "episodes/2026-10-09.mp3",
+   "title": "Oct 9: Boat Trip to Ha Long Bay",
+   "topic": "travel: Ha Long Bay in Vietnam",
+   "new_words": [
+    "journey",
+    "harbour",
+    "scenery",
+    "cliff"
+   ],
+   "news_headline": "Bronze Age hoards, Viking swords and more amazing UK treasure finds",
+   "summary": "Topic: travel: Ha Long Bay in Vietnam. New words: journey, harbour, scenery, cliff. News from BBC Newsround.",
+   "duration_sec": 312,
+   "bytes": 2499309
+  },
+  {
+   "date": "2026-10-10",
+   "file": "episodes/2026-10-10.mp3",
+   "title": "Oct 10: Dancing Bees and Hand-Holding Otters",
+   "topic": "animals",
+   "new_words": [
+    "creature",
+    "signal",
+    "enormous",
+    "survive"
+   ],
+   "news_headline": "New stamps celebrate 100 years of Winnie-the-Pooh",
+   "summary": "Topic: animals. New words: creature, signal, enormous, survive. News from BBC Newsround.",
+   "duration_sec": 314,
+   "bytes": 2511597
+  }
+ ]
+}
