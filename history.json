@@ -1,0 +1,276 @@
+{
+ "episodes": [
+  {
+   "date": "2026-10-02",
+   "file": "episodes/2026-10-02.mp3",
+   "title": "Oct 2: The Orchestra and the Animal Party",
+   "topic": "classical music",
+   "new_words": [
+    "melody",
+    "section",
+    "gradually",
+    "perform"
+   ],
+   "news_headline": "",
+   "summary": "Topic: classical music. New words: melody, section, gradually, perform.",
+   "duration_sec": 281,
+   "bytes": 2250477
+  },
+  {
+   "date": "2026-10-03",
+   "file": "episodes/2026-10-03.mp3",
+   "title": "Oct 3: Blast Off! A Trip Around the Earth",
+   "topic": "space",
+   "new_words": [
+    "launch",
+    "orbit",
+    "gravity",
+    "experiment"
+   ],
+   "news_headline": "50 years of Saturday morning kids TV",
+   "summary": "Topic: space. New words: launch, orbit, gravity, experiment. News from BBC Newsround.",
+   "duration_sec": 306,
+   "bytes": 2451117
+  },
+  {
+   "date": "2026-10-04",
+   "file": "episodes/2026-10-04.mp3",
+   "title": "Oct 4: Trains: From Steam to Bullet",
+   "topic": "trains",
+   "new_words": [
+    "invent",
+    "passenger",
+    "carriage",
+    "tunnel"
+   ],
+   "news_headline": "Winner of Fat Bear Week 2026 revealed",
+   "summary": "Topic: trains. New words: invent, passenger, carriage, tunnel. News from BBC Newsround.",
+   "duration_sec": 303,
+   "bytes": 2428461
+  },
+  {
+   "date": "2026-10-05",
+   "file": "episodes/2026-10-05.mp3",
+   "title": "Oct 5: A Rainy Day Pizza Surprise",
+   "topic": "food: how pizza is made",
+   "new_words": [
+    "recipe",
+    "dough",
+    "ripe",
+    "stir"
+   ],
+   "news_headline": "Happy News: Stories to make you smile",
+   "summary": "Topic: food: how pizza is made. New words: recipe, dough, ripe, stir. News from BBC Newsround.",
+   "duration_sec": 314,
+   "bytes": 2515437
+  },
+  {
+   "date": "2026-10-06",
+   "file": "episodes/2026-10-06.mp3",
+   "title": "Oct 6: Rainy Day Painting Adventure",
+   "topic": "painting",
+   "new_words": [
+    "portrait",
+    "sketch",
+    "gallery",
+    "mixture"
+   ],
+   "news_headline": "Watch Newsround",
+   "summary": "Topic: painting. New words: portrait, sketch, gallery, mixture. News from BBC Newsround.",
+   "duration_sec": 334,
+   "bytes": 2674797
+  },
+  {
+   "date": "2026-10-07",
+   "file": "episodes/2026-10-07.mp3",
+   "title": "Oct 7: Velcro: A Big Idea from Tiny Seeds",
+   "topic": "inventions",
+   "new_words": [
+    "engineer",
+    "notice",
+    "hook",
+    "fasten"
+   ],
+   "news_headline": "Your Planet: Environmental news from around the world",
+   "summary": "Topic: inventions. New words: engineer, notice, hook, fasten. News from BBC Newsround.",
+   "duration_sec": 313,
+   "bytes": 2502573
+  },
+  {
+   "date": "2026-10-08",
+   "file": "episodes/2026-10-08.mp3",
+   "title": "Oct 8: Peach Baskets and a School Tournament",
+   "topic": "sports",
+   "new_words": [
+    "tournament",
+    "equipment",
+    "opponent",
+    "referee"
+   ],
+   "news_headline": "Lionel Messi plays final game for Argentina",
+   "summary": "Topic: sports. New words: tournament, equipment, opponent, referee. News from BBC Newsround.",
+   "duration_sec": 340,
+   "bytes": 2719533
+  },
+  {
+   "date": "2026-10-09",
+   "file": "episodes/2026-10-09.mp3",
+   "title": "Oct 9: Boat Trip to Ha Long Bay",
+   "topic": "travel: Ha Long Bay in Vietnam",
+   "new_words": [
+    "journey",
+    "harbour",
+    "scenery",
+    "cliff"
+   ],
+   "news_headline": "Bronze Age hoards, Viking swords and more amazing UK treasure finds",
+   "summary": "Topic: travel: Ha Long Bay in Vietnam. New words: journey, harbour, scenery, cliff. News from BBC Newsround.",
+   "duration_sec": 312,
+   "bytes": 2499309
+  },
+  {
+   "date": "2026-10-10",
+   "file": "episodes/2026-10-10.mp3",
+   "title": "Oct 10: Dancing Bees and Hand-Holding Otters",
+   "topic": "animals",
+   "new_words": [
+    "creature",
+    "signal",
+    "enormous",
+    "survive"
+   ],
+   "news_headline": "New stamps celebrate 100 years of Winnie-the-Pooh",
+   "summary": "Topic: animals. New words: creature, signal, enormous, survive. News from BBC Newsround.",
+   "duration_sec": 314,
+   "bytes": 2511597
+  },
+  {
+   "date": "2026-10-11",
+   "file": "episodes/2026-10-11.mp3",
+   "title": "Oct 11: Oct 11: Ben and Lily's First Concert",
+   "topic": "classical music",
+   "new_words": [
+    "audience",
+    "conductor",
+    "rhythm",
+    "imagine"
+   ],
+   "news_headline": "Meet the prehistoric otter-like animal that swam alongside dinosaurs",
+   "summary": "Topic: classical music. New words: audience, conductor, rhythm, imagine. News from BBC Newsround.",
+   "duration_sec": 322,
+   "bytes": 2578413
+  },
+  {
+   "date": "2026-10-12",
+   "file": "episodes/2026-10-12.mp3",
+   "title": "Oct 12: Leo and Mia Look at the Moon",
+   "topic": "space",
+   "new_words": [
+    "telescope",
+    "surface",
+    "discover",
+    "mission"
+   ],
+   "news_headline": "What are the Northern Lights and how can you see them?",
+   "summary": "Topic: space. New words: telescope, surface, discover, mission. News from BBC Newsround.",
+   "duration_sec": 323,
+   "bytes": 2588013
+  },
+  {
+   "date": "2026-10-13",
+   "file": "episodes/2026-10-13.mp3",
+   "title": "Oct 13: Sam and Nina Take the Train",
+   "topic": "trains",
+   "new_words": [
+    "platform",
+    "announcement",
+    "delay",
+    "route"
+   ],
+   "news_headline": "",
+   "summary": "Topic: trains. New words: platform, announcement, delay, route.",
+   "duration_sec": 310,
+   "bytes": 2477613
+  },
+  {
+   "date": "2026-10-14",
+   "file": "episodes/2026-10-14.mp3",
+   "title": "Oct 14: Where Does Chocolate Come From?",
+   "topic": "food: where chocolate comes from and how it is made",
+   "new_words": [
+    "harvest",
+    "ingredient",
+    "roast",
+    "bitter"
+   ],
+   "news_headline": "How is Winnie-the-Pooh celebrating his 100th birthday?",
+   "summary": "Topic: food: where chocolate comes from and how it is made. New words: harvest, ingredient, roast, bitter. News from BBC Newsround.",
+   "duration_sec": 304,
+   "bytes": 2432493
+  },
+  {
+   "date": "2026-10-15",
+   "file": "episodes/2026-10-15.mp3",
+   "title": "Oct 15: Kai and Rosa Paint a Garden",
+   "topic": "painting",
+   "new_words": [
+    "canvas",
+    "palette",
+    "blend",
+    "shade"
+   ],
+   "news_headline": "Poo-pushing beetle wins Young Wildlife Photographer Award",
+   "summary": "Topic: painting. New words: canvas, palette, blend, shade. News from BBC Newsround.",
+   "duration_sec": 319,
+   "bytes": 2550189
+  },
+  {
+   "date": "2026-10-16",
+   "file": "episodes/2026-10-16.mp3",
+   "title": "Oct 16: Sticky Notes: A Weak Glue and a Big Idea",
+   "topic": "inventions",
+   "new_words": [
+    "glue",
+    "peel",
+    "attach",
+    "solve"
+   ],
+   "news_headline": "Check out this smiley face in space",
+   "summary": "Topic: inventions. New words: glue, peel, attach, solve. News from BBC Newsround.",
+   "duration_sec": 293,
+   "bytes": 2346477
+  },
+  {
+   "date": "2026-10-17",
+   "file": "episodes/2026-10-17.mp3",
+   "title": "Oct 17: Ken and Lily at the Skate Park",
+   "topic": "sports: skateboarding and how it started",
+   "new_words": [
+    "balance",
+    "improve",
+    "champion",
+    "confident"
+   ],
+   "news_headline": "Artistic Gymnastics World Championships 2026: Everything you need to know",
+   "summary": "Topic: sports: skateboarding and how it started. New words: balance, improve, champion, confident. News from BBC Newsround.",
+   "duration_sec": 329,
+   "bytes": 2632365
+  },
+  {
+   "date": "2026-10-18",
+   "file": "episodes/2026-10-18.mp3",
+   "title": "Oct 18: Orange Gates in Kyoto",
+   "topic": "travel: Fushimi Inari in Kyoto, Japan",
+   "new_words": [
+    "ancient",
+    "souvenir",
+    "tradition",
+    "exhausted"
+   ],
+   "news_headline": "Send us your questions for Percy Jackson author Rick Riordan",
+   "summary": "Topic: travel: Fushimi Inari in Kyoto, Japan. New words: ancient, souvenir, tradition, exhausted. News from BBC Newsround.",
+   "duration_sec": 295,
+   "bytes": 2362221
+  }
+ ]
+}
