@@ -1,0 +1,83 @@
+name: Daily English episode
+
+on:
+  schedule:
+    - cron: "17 17 * * *"   # 01:17 Taiwan time (UTC+8), early on purpose because GitHub delays schedules
+  workflow_dispatch:         # lets you run it manually from the Actions tab
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-episode
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - run: pip install -r requirements.txt
+
+      - name: Fetch previously published site (episodes + history)
+        run: |
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            git clone --depth 1 --branch gh-pages \
+              "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" site
+            rm -rf site/.git
+          else
+            mkdir -p site
+          fi
+
+      - name: Generate today's episode
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_TTS_API_KEY: ${{ secrets.GOOGLE_TTS_API_KEY }}
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TTS_PROVIDER: ${{ vars.TTS_PROVIDER || 'google' }}
+          GOOGLE_TTS_VOICE: ${{ vars.GOOGLE_TTS_VOICE }}
+          GOOGLE_TTS_VOICE_A: ${{ vars.GOOGLE_TTS_VOICE_A }}
+          GOOGLE_TTS_VOICE_B: ${{ vars.GOOGLE_TTS_VOICE_B }}
+          GOOGLE_TTS_VOICE_MATH: ${{ vars.GOOGLE_TTS_VOICE_MATH }}
+          AZURE_SPEECH_REGION: ${{ vars.AZURE_SPEECH_REGION }}
+          AZURE_TTS_VOICE_MATH: ${{ vars.AZURE_TTS_VOICE_MATH }}
+          MATH_TTS: ${{ vars.MATH_TTS }}
+          MATH_RATE: ${{ vars.MATH_RATE }}
+          MATH: ${{ vars.MATH }}
+          MATH_THINK_SECONDS: ${{ vars.MATH_THINK_SECONDS }}
+          SERIAL: ${{ vars.SERIAL }}
+          SERIAL_CHAPTERS: ${{ vars.SERIAL_CHAPTERS }}
+          OPENAI_TTS_VOICE: ${{ vars.OPENAI_TTS_VOICE }}
+          OPENAI_TTS_VOICE_A: ${{ vars.OPENAI_TTS_VOICE_A }}
+          OPENAI_TTS_VOICE_B: ${{ vars.OPENAI_TTS_VOICE_B }}
+          SPEAKING_RATE: ${{ vars.SPEAKING_RATE }}
+          SPELL_MODE: ${{ vars.SPELL_MODE }}
+          MUSIC: ${{ vars.MUSIC }}
+          MUSIC_GAIN_DB: ${{ vars.MUSIC_GAIN_DB }}
+          CLAUDE_MODEL: ${{ vars.CLAUDE_MODEL }}
+          KID_NAME: ${{ vars.KID_NAME }}
+          SHOW_TITLE: ${{ vars.SHOW_TITLE }}
+          WEATHER_LAT: ${{ vars.WEATHER_LAT }}
+          WEATHER_LON: ${{ vars.WEATHER_LON }}
+          WEATHER_PLACE: ${{ vars.WEATHER_PLACE }}
+          SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
+        run: python generate.py
+
+      - name: Publish to GitHub Pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          publish_branch: gh-pages
+          force_orphan: true   # keeps the repo small: only the latest site snapshot is stored
