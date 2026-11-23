@@ -17,6 +17,7 @@ import io
 import json
 import os
 import re
+import signal
 import sys
 import time
 import datetime as dt
@@ -155,7 +156,7 @@ def post_with_retry(url: str, **kwargs) -> requests.Response:
 
 
 # ---------- data sources ----------
-def get_weather() -> dict | None:
+def get_weather(day: dt.date | None = None) -> dict | None:
     try:
         r = requests.get(
             "https://api.open-meteo.com/v1/forecast",
@@ -163,12 +164,14 @@ def get_weather() -> dict | None:
                 "latitude": WEATHER_LAT, "longitude": WEATHER_LON,
                 "daily": "weather_code,temperature_2m_max,temperature_2m_min,"
                          "precipitation_probability_max",
-                "timezone": "Asia/Taipei", "forecast_days": 1,
+                "timezone": "Asia/Taipei", "forecast_days": 3,
             },
             timeout=20,
         )
         r.raise_for_status()
         d = r.json()["daily"]
+        i = d["time"].index(day.isoformat()) if day and day.isoformat() in d["time"] else 0
+        d = {k: (v[i:] if isinstance(v, list) else v) for k, v in d.items()}
         return {
             "place": WEATHER_PLACE,
             "description": WMO.get(int(d["weather_code"][0]), "mixed"),
@@ -492,7 +495,7 @@ def validate_script(s: dict, check_length: bool = True, serial_k: int | None = N
 def generate_script(today, weather, news, plan, history) -> dict:
     import anthropic
 
-    client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
+    client = anthropic.Anthropic(timeout=180, max_retries=2)  # reads ANTHROPIC_API_KEY
     serial = plan.get("serial")
     system = SYSTEM + (SERIAL_ADDENDUM if serial else "")
     min_dialogue = 8 if serial else 6
@@ -1115,7 +1118,10 @@ def write_feed(history: dict) -> None:
     items = []
     for e in eps:
         d = dt.date.fromisoformat(e["date"])
-        pub = format_datetime(dt.datetime.combine(d, dt.time(0, 5), TZ))
+        if e.get("published_at"):
+            pub = format_datetime(dt.datetime.fromisoformat(e["published_at"]))
+        else:
+            pub = format_datetime(dt.datetime.combine(d, dt.time(0, 5), TZ))
         url = f"{SITE_URL}/{e['file']}"
         items.append(f"""    <item>
       <title>{escape(e['title'])}</title>
@@ -1191,9 +1197,24 @@ def main() -> None:
         print("wrote music_preview.mp3 (" + ", ".join(order) + ")")
         return
 
-    today = dt.date.fromisoformat(args.date) if args.date else dt.datetime.now(TZ).date()
+    if hasattr(signal, "alarm") and not args.dry_run:     # a stuck run fails after 22 min instead of hanging
+        def _too_long(*_):
+            raise SystemExit("Run took too long, stopped")
+        signal.signal(signal.SIGALRM, _too_long)
+        signal.alarm(22 * 60)
+    now = dt.datetime.now(TZ)
+    # a run in the evening (after 18:00 Taiwan time) prepares tomorrow morning's episode
+    today = dt.date.fromisoformat(args.date) if args.date else (now.date() + dt.timedelta(days=1 if now.hour >= 18 else 0))
     (SITE_DIR / "episodes").mkdir(parents=True, exist_ok=True)
     history = load_history()
+    if (ENV("GITHUB_EVENT_NAME") == "schedule" and not args.dry_run and not args.date
+            and (SITE_DIR / f"episodes/{today.isoformat()}.mp3").exists()
+            and any(e["date"] == today.isoformat() for e in history["episodes"])):
+        log(f"[info] the {today} episode already exists, nothing to do")
+        if ENV("GITHUB_OUTPUT"):
+            with open(ENV("GITHUB_OUTPUT"), "a") as f:
+                f.write("skipped=true\n")
+        return
     topic = args.topic or ENV("TOPIC") or choose_topic(today, history)
     serial = serial_plan(today, history)
     if args.serial and not serial:
@@ -1211,7 +1232,7 @@ def main() -> None:
         log(f"[info] brain game: {KIND_NAMES[mplan['kind']]}"
             + (f", times table {mplan['base']} (seen {mplan['seen']} times), questions {mplan['questions']}, "
                f"review {mplan['review']}" if mplan["kind"] == "M" else ""))
-    weather = get_weather()
+    weather = get_weather(today)
     news = get_news(today)
     log(f"[info] weather: {weather}; news candidates: {len(news)}")
 
@@ -1261,6 +1282,7 @@ def main() -> None:
         "math_kind": mplan["kind"] if mplan else "",
         "news_headline": script.get("news_headline", "") if script.get("news_used") else "",
         "summary": summary, "duration_sec": duration, "bytes": out.stat().st_size,
+        "published_at": now.isoformat(timespec="seconds"),
     }
     if serial and not args.dry_run:
         st = history.get("serial") or {}

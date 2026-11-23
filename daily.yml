@@ -2,7 +2,11 @@ name: Daily English episode
 
 on:
   schedule:
-    - cron: "17 17 * * *"   # 01:17 Taiwan time (UTC+8), early on purpose because GitHub delays schedules
+    # GitHub often starts scheduled runs hours late, so there are three tries every night.
+    # The first run that finishes makes tomorrow's episode, and the others see it exists and stop.
+    - cron: "17 14 * * *"   # 22:17 Taiwan time
+    - cron: "17 17 * * *"   # 01:17 Taiwan time
+    - cron: "17 20 * * *"   # 04:17 Taiwan time
   workflow_dispatch:         # lets you run it manually from the Actions tab
 
 permissions:
@@ -15,7 +19,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
 
@@ -39,7 +43,8 @@ jobs:
             mkdir -p site
           fi
 
-      - name: Generate today's episode
+      - name: Generate the episode
+        id: gen
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GOOGLE_TTS_API_KEY: ${{ secrets.GOOGLE_TTS_API_KEY }}
@@ -75,6 +80,7 @@ jobs:
         run: python generate.py
 
       - name: Publish to GitHub Pages branch
+        if: steps.gen.outputs.skipped != 'true'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
