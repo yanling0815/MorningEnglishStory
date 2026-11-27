@@ -944,9 +944,14 @@ MATH_TIPS = {
 
 
 OPS = {"+": "加", "-": "減", "*": "乘以", "/": "除以"}
+MATH_FOCUS = (ENV("MATH_FOCUS") or "fractions").lower()     # fractions | mixed (older topics: A, C, D, F)
 MATH_KINDS = ["A", "C", "D", "F"]       # A order of operations, C distributive law, D chain division, F find the mistake
+FRACTION_ROTATION = ["R", "L", "T", "S", "L", "G"]   # six non-times-table days: reduce/expand, LCM speed, common denominator, add/subtract, LCM speed, spot the mistake
+MATH_LCM_SECONDS = float(ENV("MATH_LCM_SECONDS") or 4)
 MATH_MULT_DAY = int(ENV("MATH_MULT_DAY") or 2)     # weekday of the times-table day (0 = Monday ... 2 = Wednesday)
-KIND_NAMES = {"A": "order of operations", "C": "distributive law", "D": "chain division",
+KIND_NAMES = {"R": "reduce and expand fractions", "L": "lowest common multiple speed drill",
+              "T": "common denominators", "S": "adding and subtracting fractions", "G": "spot the fraction mistake",
+              "A": "order of operations", "C": "distributive law", "D": "chain division",
               "F": "spot the mistake", "M": "times table"}
 
 
@@ -1019,6 +1024,206 @@ def _mistake_rounds(rng):
     return rounds
 
 
+# ---------- fractions (reduce, expand, common denominator, add and subtract) ----------
+from math import gcd
+
+
+def _lcm(a: int, b: int) -> int:
+    return a * b // gcd(a, b)
+
+
+def fz(n: int, d: int) -> str:
+    """Fraction in spoken Chinese: denominator first, 3/4 = 四分之三."""
+    return f"{zh_num(d)}分之{zh_num(n)}"
+
+
+PAIRS = {
+    0: [(2, 4), (3, 6), (2, 6), (4, 8), (3, 9), (2, 8), (5, 10), (4, 12), (6, 12)],     # one is a multiple of the other
+    1: [(2, 3), (3, 4), (2, 5), (3, 5), (4, 5), (5, 6)],                                 # small, no common factor
+    2: [(4, 6), (6, 8), (4, 10), (6, 9), (8, 12), (9, 12), (6, 10), (8, 10), (10, 12)],  # need a real least common multiple
+}
+
+
+def _pair_pool(lv: int) -> list:
+    return {0: PAIRS[0] + PAIRS[1][:3], 1: PAIRS[1] + PAIRS[2][:3], 2: PAIRS[1][2:] + PAIRS[2]}[lv]
+
+
+def _proper(rng, d: int, unit: bool = False) -> int:
+    """A numerator n with n/d in lowest terms (1 when unit)."""
+    if unit:
+        return 1
+    return rng.choice([n for n in range(1, d) if gcd(n, d) == 1])
+
+
+def _frac_reduce_q(rng, lv: int, bigger: bool = False):
+    for _ in range(200):
+        b = rng.randint(2, [5, 7, 8][lv]); k = rng.randint(*[(2, 4), (2, 4), (3, 6)][lv])
+        lim = 12 if lv < 2 else 24
+        if bigger and k < 3:
+            continue
+        if k * b > lim:
+            continue
+        a = _proper(rng, b)
+        return a, b, k
+    return 1, 2, 3
+
+
+def _pieces_reduce(rng, lv: int):
+    qs = []
+    a, b, k = _frac_reduce_q(rng, lv)
+    qs.append((f"{fz(a * k, b * k)}，約成最簡分數是多少？",
+               f"分子分母同時除以{zh_num(k)}，等於{fz(a, b)}。"))
+    a, b, k = _frac_reduce_q(rng, lv)
+    qs.append((f"{fz(a, b)}，擴成{zh_num(b * k)}分之幾？",
+               f"分母{zh_num(b)}乘以{zh_num(k)}，等於{zh_num(b * k)}，所以分子也要乘以{zh_num(k)}，答案是{zh_num(a * k)}。"))
+    a, b, k = _frac_reduce_q(rng, lv, bigger=True)
+    qs.append((f"{fz(a * k, b * k)}，約成最簡分數是多少？",
+               f"分子分母同時除以{zh_num(k)}，等於{fz(a, b)}。"))
+    return qs
+
+
+def _expand_say(a: int, b: int, l: int, x: int) -> str:
+    if l == b:
+        return f"{fz(a, b)}不用變。"
+    return f"{fz(a, b)}，分子分母同時乘以{zh_num(l // b)}，變成{fz(x, l)}。"
+
+
+def _pieces_common(rng, lv: int):
+    pool = _pair_pool(lv); qs = []
+    for i, (b, d) in enumerate(rng.sample(pool, 3)):
+        if rng.random() < 0.5:
+            b, d = d, b
+        a, c = _proper(rng, b, unit=(lv == 0)), _proper(rng, d, unit=(lv == 0))
+        l = _lcm(b, d); x, y = a * (l // b), c * (l // d)
+        qs.append((f"{fz(a, b)}和{fz(c, d)}，通分成幾分之幾？",
+                   f"最小公倍數是{zh_num(l)}。" + _expand_say(a, b, l, x) + _expand_say(c, d, l, y)))
+    return qs
+
+
+def _addsub(rng, lv: int, op: str):
+    # gentler than the other games: level 0 only uses denominators where one is a multiple of the other
+    pool = {0: PAIRS[0], 1: PAIRS[0][:4] + PAIRS[1][:4], 2: PAIRS[1] + PAIRS[2][:4]}[lv]
+    for _ in range(400):
+        b, d = rng.choice(pool)
+        if rng.random() < 0.5:
+            b, d = d, b
+        if b == d:
+            continue
+        a, c = _proper(rng, b, unit=(lv == 0)), _proper(rng, d, unit=(lv == 0))
+        l = _lcm(b, d); x, y = a * (l // b), c * (l // d)
+        z = x + y if op == "+" else x - y
+        if (op == "+" and z < l) or (op == "-" and z > 0):
+            return a, b, c, d, l, x, y, z
+    return 1, 2, 1, 4, 4, 2, 1, 3 if op == "+" else 1
+
+
+def _pieces_addsub(rng, lv: int):
+    ordinal = ["第一題", "第二題", "第三題"]
+    out = []
+    for i in range(3):
+        op = "+" if i != 1 else "-"
+        a, b, c, d, l, x, y, z = _addsub(rng, max(0, lv - 1) if i == 0 else lv, op)
+        w = "加" if op == "+" else "減"
+        g = gcd(z, l)
+        tail = f"還可以約分，約成{fz(z // g, l // g)}。" if g > 1 else ""
+        out.append((f"{ordinal[i]}，{fz(a, b)}{w}{fz(c, d)}。先告訴我，通分以後，分母是多少？", "ask1", l))
+        out.append((f"{zh_num(l)}。那麼，答案的分子是多少？", "ask2", None))
+        out.append((f"時間到！通分以後，{fz(x, l)}{w}{fz(y, l)}，分子{zh_num(x)}{w}{zh_num(y)}，等於{zh_num(z)}，"
+                    f"答案是{fz(z, l)}。{tail}", "ans", None))
+    return out
+
+
+def _pieces_lcm(rng, lv: int):
+    out = []
+    for b, d in rng.sample(_pair_pool(lv), 5):
+        if rng.random() < 0.5:
+            b, d = d, b
+        l = _lcm(b, d)
+        out.append((f"{zh_num(b)}和{zh_num(d)}，最小公倍數是多少？",
+                    f"{zh_num(l)}。因為{zh_num(b)}乘以{zh_num(l // b)}，{zh_num(d)}乘以{zh_num(l // d)}。"))
+    return out
+
+
+def _fraction_mistakes(rng, lv: int):
+    rounds = []
+    pool = _pair_pool(max(1, lv))
+    # round 1: added numerators and denominators
+    for _ in range(300):
+        b, d = rng.choice(pool)
+        if b == d:
+            continue
+        a, c = _proper(rng, b, unit=True), _proper(rng, d, unit=True)
+        l = _lcm(b, d); x, y = a * (l // b), c * (l // d)
+        if x + y < l:
+            break
+    g = gcd(x + y, l)
+    right = fz((x + y) // g, l // g)
+    rounds.append((f"{fz(a, b)}加{fz(c, d)}，它說分子{zh_num(a)}加{zh_num(c)}得{zh_num(a + c)}，"
+                   f"分母{zh_num(b)}加{zh_num(d)}得{zh_num(b + d)}，等於{fz(a + c, b + d)}",
+                   f"小圓錯了！分數相加，分母不能直接加。要先通分，最小公倍數是{zh_num(l)}，"
+                   f"變成{fz(x, l)}加{fz(y, l)}，正確答案是{right}。"))
+    # round 2: changed the denominator but forgot the numerator
+    for _ in range(300):
+        b, d = rng.choice(pool)
+        if b == d:
+            continue
+        a, c = _proper(rng, b), _proper(rng, d)
+        l = _lcm(b, d); x, y = a * (l // b), c * (l // d)
+        if l > max(b, d) and x - y > 0 and a - c > 0:
+            break
+    g = gcd(x - y, l)
+    rounds.append((f"{fz(a, b)}減{fz(c, d)}，它把分母通分成{zh_num(l)}，分子沒有變，{zh_num(a)}減{zh_num(c)}，"
+                   f"等於{fz(a - c, l)}",
+                   f"小圓忘記了！分母乘的時候，分子也要跟著乘。{fz(a, b)}是{fz(x, l)}，{fz(c, d)}是{fz(y, l)}，"
+                   f"正確答案是{fz((x - y) // g, l // g)}。"))
+    # round 3: did not reduce all the way
+    gg, p = rng.choice([(4, 2), (6, 2), (9, 3), (10, 2), (12, 2)])
+    for _ in range(100):
+        b = rng.randint(2, 4); a = _proper(rng, b)
+        if gg * b <= 40:
+            break
+    rounds.append((f"{fz(gg * a, gg * b)}約成最簡分數，它同時除以{zh_num(p)}，得到{fz(gg * a // p, gg * b // p)}，說這就是最簡分數",
+                   f"還沒約完喔！{zh_num(gg * a // p)}和{zh_num(gg * b // p)}還可以同時除以{zh_num(gg // p)}，"
+                   f"最簡分數是{fz(a, b)}。"))
+    return rounds
+
+
+def fraction_pieces(kind: str, lv: int, rng) -> list:
+    gap = int(MATH_THINK_SECONDS * 1000)
+    ordinal = ["第一題", "第二題", "第三題", "第四題", "第五題"]
+    pieces = [(FRACTION_INTRO[kind], 900)]
+    if kind in ("R", "T"):
+        qs = _pieces_reduce(rng, lv) if kind == "R" else _pieces_common(rng, lv)
+        for i, (q, ex) in enumerate(qs):
+            pieces.append((f"{ordinal[i]}，{q}", gap))
+            pieces.append((f"時間到！{ex}", 700))
+    elif kind == "L":
+        lg = int(MATH_LCM_SECONDS * 1000)
+        for i, (q, ex) in enumerate(_pieces_lcm(rng, lv)):
+            pieces.append((f"{ordinal[i]}，{q}", lg))
+            pieces.append((f"時間到！{ex}", 500))
+    elif kind == "S":
+        for text, step, _ in _pieces_addsub(rng, lv):
+            pieces.append((text, {"ask1": 4000, "ask2": gap, "ans": 800}[step]))
+    else:
+        for i, (q, ex) in enumerate(_fraction_mistakes(rng, lv)):
+            pieces.append((f"第{zh_num(i + 1)}回。機器人小圓說：{q}。你覺得哪裡怪怪的？", gap))
+            pieces.append((ex, 700))
+    pieces[-1] = (pieces[-1][0] + "你做得很棒！", 500)
+    return pieces
+
+
+FRACTION_INTRO = {
+    "R": "腦力小遊戲時間！今天玩約分和擴分。約分，是分子分母一起除；擴分，是分子分母一起乘。",
+    "L": "腦力小遊戲時間！今天是速度挑戰：找最小公倍數。每題只有幾秒鐘。最小公倍數越熟，通分就越快！",
+    "T": "腦力小遊戲時間！今天來玩通分：先找最小公倍數，再把分子分母一起乘。",
+    "S": "腦力小遊戲時間！今天玩分數加減。步驟是：先通分，再加減分子，最後看看能不能約分。",
+    "G": "今天又是找錯遊戲！機器人小圓在算分數，仔細聽，哪裡怪怪的？",
+}
+
+
+
+
 def math_plan(today: dt.date, history: dict) -> dict:
     """Today's brain game. Times-table day once a week, other days rotate A, C, D, F.
     Everything is computed by the program, so the answers are always correct (same result if re-run the same day)."""
@@ -1035,6 +1240,13 @@ def math_plan(today: dt.date, history: dict) -> dict:
         plan.update(base=base, seen=seen, questions=[(base, m) for m in sorted(pool[:3])])
         if mprev:
             plan["review"] = (mprev[-1]["math_base"], r2.choice(range(2, 7)))
+        return plan
+    if MATH_FOCUS != "mixed":
+        done = [e for e in prev if e.get("math_kind") in FRACTION_ROTATION]
+        kind = FRACTION_ROTATION[len(done) % len(FRACTION_ROTATION)]
+        times = sum(1 for e in prev if e.get("math_kind") == kind)
+        lv = min(2, times // 3)                           # a little harder every three times
+        plan.update(kind=kind, level=lv, pieces=fraction_pieces(kind, lv, rng))
         return plan
     done = [e for e in prev if e.get("math_kind") in MATH_KINDS]
     kind = MATH_KINDS[len(done) % len(MATH_KINDS)]
@@ -1066,6 +1278,8 @@ MATH_INTRO = {
 
 
 def math_segment(plan: dict) -> dict:
+    if plan.get("pieces"):
+        return {"id": "math_zh", "zh_pieces": plan["pieces"], "text": "", "pause_after": 0.6}
     gap = int(MATH_THINK_SECONDS * 1000)
     ordinal = ["第一題", "第二題", "第三題"]
     if plan["kind"] != "M":
